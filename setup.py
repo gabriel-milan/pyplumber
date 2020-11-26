@@ -43,7 +43,11 @@ setup(
         "online",
         "pipelines",
     ],
-    install_requires=["cython"],
+    install_requires=[
+        "cython",
+        "dill",
+        "redis",
+    ],
     extras_require={
         'test': [
             'numpy'
