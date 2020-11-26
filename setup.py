@@ -51,7 +51,6 @@ setup(
     ],
     extras_require={
         'test': [
-            'numpy'
         ],
     },
 
