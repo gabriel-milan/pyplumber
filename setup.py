@@ -47,6 +47,7 @@ setup(
         "cython",
         "dill",
         "redis",
+        "typing",
     ],
     extras_require={
         'test': [
