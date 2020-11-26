@@ -1,0 +1,25 @@
+services:
+  - redis-server
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.9"
+  - pypy3
+before_install:
+  - python --version
+  - pip install -U pip
+  - pip install -U pytest-cov
+  - pip install codecov
+install:
+  - pip install ".[test]"
+script:
+  - pytest
+after_success:
+  - codecov
+env:
+  global:
+    secure: LnTq+RHpj98T6K6CbYb1b4vWxJ2jZL4j4+hphPI2NMDKFUvM+wW5phtbFSiMhN8+JxFBiKCS5sw7T06Y6bbsU+npCWuUU3bhvDKd+jaDOvv8zYQi7av7zjQqht9CdSKz+6O8HYiVHiDTsuXoYwEKxxQKffUikSt6ZIJHQCYOIJyOo1fHn4rc/nIM19AzHQhhbT8FTVWyxjSB/hd1wwOXO0sL3JKdVHObG+wXUuyxL9ioT+X+07Gj7hxSa/VQENDKwpLM1OkM0VwkgX9CcYu2WByIqOmEEoBvjjOpBBjGwvnmtnAW7PBLn4uzdwoOOVAmdeY7CsqkpvClxX8JAre+itN2JbZVu3XG/nl6fN8n5AT5c1eAcXnbE5Y4jrG+7bJI8Bd8OMEE2lc6adYD1AIvhAVYjFRSlx9ksoJkXegXBEYZeUUL1ZMbWETvAMXK1hAP6TE3be85EQdgDQRtzlgsa0lEYbvU3WrZ3mP1Xzs6arngZR+bC2v0n2RzOsdpkS3pxPN0obiRaHDoL2EBa5RQ+bN0ej+ja8b5W2CVe2Tp9R5Gp+Zq2XAPDwlr/fN6HKEeVTW2jdzCvBLQtYxXSNav55x9D5tWsaI2ziZSDqhuaSw8HM6gLpavP/8AXA4UlzIURjo5q8hlcwbVLCuhDJAnckmVS9t5HdREj8UY/DzMsFY=
