@@ -24,7 +24,7 @@ class Task(Process):
 
     def __init__(self, *args, **kwargs) -> None:
         super(Task, self).__init__(*args, **kwargs)
-        self.daemon: bool = True
+        self.daemon = True
         self.__manager = Manager()
         self.__sink: Sink = None
         self._dict = self.__manager.dict()
