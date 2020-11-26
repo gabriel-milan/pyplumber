@@ -90,6 +90,7 @@ def test_unpickle_fail():
 def test_deserialize_int():
     _, sink = setup()
     assert sink._serialize(1) == 1
+    assert sink._deserialize(1) == 1
 
 
 def test_force_dill():

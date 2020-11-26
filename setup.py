@@ -46,14 +46,15 @@ setup(
     install_requires=[
         "cython",
         "dill",
+        "networkx",
         "redis",
         "typing",
     ],
     extras_require={
-        'test': [
+        "test": [
+            "matplotlib",
         ],
     },
-
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

@@ -1,4 +1,4 @@
-__all__ = ["SerializationError"]
+__all__ = ["SerializationError", "DeserializationError", "FatalError"]
 
 
 class SerializationError(Exception):
@@ -6,4 +6,8 @@ class SerializationError(Exception):
 
 
 class DeserializationError(Exception):
+    pass
+
+
+class FatalError(Exception):
     pass

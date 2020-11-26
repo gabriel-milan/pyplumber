@@ -9,6 +9,20 @@ from pyplumber.exceptions import SerializationError, DeserializationError
 
 
 class Sink(redis.Redis):
+    """
+    The sink is where you dump all the
+    data you want to be visible to the
+    entire framework. You can use it as
+    a key-value data structure using the
+    "get" and "set" methods.
+
+    This class inherits from redis.Redis
+    and the only difference is that it
+    handles serialization and deserialization
+    of objects so you can set anything to
+    a key.
+    """
+
     def __init__(self, *args, **kwargs) -> None:
         super(Sink, self).__init__(*args, **kwargs)
 

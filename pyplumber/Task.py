@@ -27,6 +27,7 @@ class Task(Process):
         self.daemon = True
         self.__manager = Manager()
         self.__sink = None
+        self.__plumber = None
         self._dict = self.__manager.dict()
 
     def __repr__(self) -> str:
@@ -50,6 +51,12 @@ class Task(Process):
 
     def setSink(self, sink: Sink) -> None:
         self.__sink = sink
+
+    def setPlumber(self, plumber) -> None:
+        self.__plumber = plumber
+
+    def terminate(self) -> None:
+        self.__plumber.stop()
 
     def get(self, key, *args, **kwargs):
         return self.__sink.get(key, *args, **kwargs)
