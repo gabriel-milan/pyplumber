@@ -26,7 +26,7 @@ class Task(Process):
         super(Task, self).__init__(*args, **kwargs)
         self.daemon = True
         self.__manager = Manager()
-        self.__sink: Sink = None
+        self.__sink = None
         self._dict = self.__manager.dict()
 
     def __repr__(self) -> str:
