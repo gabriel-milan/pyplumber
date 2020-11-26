@@ -133,3 +133,6 @@ dmypy.json
 
 # Cythonized
 *.c
+
+# Undesired outputs
+out.png

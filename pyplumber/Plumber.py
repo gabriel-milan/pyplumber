@@ -114,27 +114,28 @@ class Plumber:
     def setup(self) -> None:
         self.__graphLock.acquire()
         for node in self.__G.nodes():
-            self.__G.node[node]["obj"].setSink(self.__sink)
-            self.__G.node[node]["obj"].setPlumber(self)
-            self.__G.node[node]["obj"].setup()
+            self.__G.nodes[node]["obj"].setSink(self.__sink)
+            self.__G.nodes[node]["obj"].setPlumber(self)
+            self.__G.nodes[node]["obj"].setup()
         self.__graphLock.release()
 
     def start(self) -> None:
         self.__graphLock.acquire()
         for node in self.__G.nodes():
-            self.__G.node[node]["obj"].start()
+            self.__G.nodes[node]["obj"].start()
         self.__graphLock.release()
 
     def __wdtHandler(self, name: str) -> None:
-        action = self.__G.node[name]["wdt_action"]
+        action = self.__G.nodes[name]["wdt_action"]
         if action == "restart":
             self.__graphLock.acquire()
             print("Node {} has triggered the watchdog, restarting...".format(name))
-            self.__G.node[name]["obj"].kill()
-            self.__G.node[name]["obj"] = self.__G.node[name]["cls"](
-                *self.__G.node[name]["args"], **self.__G.node[name]["kwargs"]
+            self.__G.nodes[name]["obj"].kill()
+            self.__G.nodes[name]["obj"] = self.__G.nodes[name]["cls"](
+                *self.__G.nodes[name]["args"], **self.__G.nodes[name]["kwargs"]
             )
-            self.__G.node[name]["obj"].start()
+            self.__G.nodes[name]["obj"].setup()
+            self.__G.nodes[name]["obj"].start()
             self.__graphLock.release()
         elif action == "terminate":
             print(
@@ -153,22 +154,22 @@ class Plumber:
 
     def startTimer(self, name: str) -> None:
         self.__graphLock.acquire()
-        if not self.__G.node[name]["timer_started"]:
-            self.__G.node[name]["timer"] = Timer(
-                interval=self.__G.node[name]["wdt_timeout"],
+        if not self.__G.nodes[name]["timer_started"]:
+            self.__G.nodes[name]["timer"] = Timer(
+                interval=self.__G.nodes[name]["wdt_timeout"],
                 function=self.__wdtHandler,
                 args=(name,),
             )
-            self.__G.node[name]["timer"].daemon = True
-            self.__G.node[name]["timer"].start()
-            self.__G.node[name]["timer_started"] = True
+            self.__G.nodes[name]["timer"].daemon = True
+            self.__G.nodes[name]["timer"].start()
+            self.__G.nodes[name]["timer_started"] = True
         self.__graphLock.release()
 
     def cancelTimer(self, name: str, pipeline: str = "") -> None:
         self.__graphLock.acquire()
         try:
-            self.__G.node[name]["timer"].cancel()
-            self.__G.node[name]["timer_started"] = False
+            self.__G.nodes[name]["timer"].cancel()
+            self.__G.nodes[name]["timer_started"] = False
         except AttributeError:
             print("Failed to cancel timer for node {}".format(name))
         self.__graphLock.release()
@@ -181,7 +182,7 @@ class Plumber:
         del self.__out
         self.__out = {}
         for node in self.__G.nodes:
-            self.__G.node[node]["executed"] = False
+            self.__G.nodes[node]["executed"] = False
         self.__graphLock.release()
 
     def forward(self, wait: bool = False) -> list:
@@ -209,7 +210,7 @@ class Plumber:
     def stop(self) -> None:
         self.__running = False
         for key in self.__G.nodes():
-            self.__G.node[key]["obj"].kill()
+            self.__G.nodes[key]["obj"].kill()
         raise SystemExit
 
     def nodeResult(
@@ -217,7 +218,7 @@ class Plumber:
     ) -> None:
         # Check if it's been executed this time
         self.__graphLock.acquire()
-        if self.__G.node[node]["executed"]:
+        if self.__G.nodes[node]["executed"]:
             return
         self.__graphLock.release()
         # Get predecessors
@@ -241,7 +242,7 @@ class Plumber:
         success = False
         while not success and self.__running:
             try:
-                data = self.__G.node[node]["obj"].execute()
+                data = self.__G.nodes[node]["obj"].execute()
                 success = True
             except:
                 self.__wdtHandler(node)
@@ -251,7 +252,7 @@ class Plumber:
         if output and callback:
             callback(data)
         self.__graphLock.acquire()
-        self.__G.node[node]["executed"] = True
+        self.__G.nodes[node]["executed"] = True
         self.__graphLock.release()
         return
 
