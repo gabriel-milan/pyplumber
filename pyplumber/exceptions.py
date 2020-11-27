@@ -7,8 +7,6 @@ class SerializationError(Exception):
     serialization fails.
     """
 
-    pass
-
 
 class DeserializationError(Exception):
     """
@@ -16,12 +14,8 @@ class DeserializationError(Exception):
     deserialization fails.
     """
 
-    pass
-
 
 class FatalError(Exception):
     """
     General purpose exception.
     """
-
-    pass

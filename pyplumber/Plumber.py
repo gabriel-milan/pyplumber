@@ -50,7 +50,7 @@ class Plumber:
         return self.__repr__()
 
     @classmethod
-    def _generateId(self) -> str:
+    def _generateId(cls) -> str:
         return "".join(random.choice(string.ascii_letters) for x in range(10))
 
     def setDebug(self, val):

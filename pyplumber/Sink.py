@@ -29,7 +29,7 @@ class Sink(redis.Redis):
         return self.__repr__()
 
     @classmethod
-    def _serialize(self, o: object) -> object:
+    def _serialize(cls, o: object) -> object:
         if isinstance(o, (str, bytes, int, float)):
             return o
         else:
@@ -42,7 +42,7 @@ class Sink(redis.Redis):
                     raise SerializationError("Failed to serialize object {}".format(o))
 
     @classmethod
-    def _deserialize(self, e: Union[str, int, float, bytes]) -> object:
+    def _deserialize(cls, e: Union[str, int, float, bytes]) -> object:
         if isinstance(e, (str, int, float)):
             return e
         else:
