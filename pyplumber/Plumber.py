@@ -26,6 +26,7 @@ class Plumber:
         debug: bool = False,
         name: str = "",
         use_linux_watchdog: bool = False,
+        maxAttempts: int = 5,
         *args,
         **kwargs
     ) -> None:
@@ -38,6 +39,9 @@ class Plumber:
         self.__running = True
         self.__out = {}
         self.__sink = Sink()
+        self.__maxAttempts = maxAttempts
+        self.__useLinuxWatchdog = use_linux_watchdog
+        self.__sendKeepAlives = True
 
     def __repr__(self) -> str:
         return "<PyPlumber Plumber (name={})>".format(self.name)
@@ -112,12 +116,22 @@ class Plumber:
         return obj
 
     def setup(self) -> None:
+        if self.__useLinuxWatchdog:
+            thread = Thread(target=self.__wdt_thread, daemon=True)
+            thread.start()
         self.__graphLock.acquire()
         for node in self.__G.nodes():
             self.__G.nodes[node]["obj"].setSink(self.__sink)
             self.__G.nodes[node]["obj"].setPlumber(self)
             self.__G.nodes[node]["obj"].setup()
         self.__graphLock.release()
+
+    def stop_watchdog(self) -> None:
+        from time import sleep
+
+        self.__useLinuxWatchdog = False
+        sleep(0.5)
+        self.__wdt_stop()
 
     def start(self) -> None:
         self.__graphLock.acquire()
@@ -129,7 +143,7 @@ class Plumber:
         action = self.__G.nodes[name]["wdt_action"]
         if action == "restart":
             self.__graphLock.acquire()
-            print("Node {} has triggered the watchdog, restarting...".format(name))
+            print("Node {} has triggered the watchdog, restarting node...".format(name))
             self.__G.nodes[name]["obj"].kill()
             self.__G.nodes[name]["obj"] = self.__G.nodes[name]["cls"](
                 *self.__G.nodes[name]["args"], **self.__G.nodes[name]["kwargs"]
@@ -143,6 +157,7 @@ class Plumber:
                     name
                 )
             )
+            self.__sendKeepAlives = False
             self.stop()
         elif action == "warn":
             print(
@@ -269,3 +284,50 @@ class Plumber:
             print(
                 'Plotting dependencies for pyPlumber are not installed on this environment. If you want to plot the dependency chart please install them with "pip install pyplumber[plot]"'
             )
+
+    def __wdt_write(self, value, count=0):
+        import os
+        from time import sleep
+
+        if count > 0:
+            print("This is attempt #{} to write on the WDT file".format(count))
+
+        if count >= self.__maxAttempts:
+            print(
+                "Tried to write on WDT file too many times, rebooting in few seconds..."
+            )
+            sleep(5)
+            os.system("reboot")
+        # Default operation
+        try:
+            fd = os.open("/dev/watchdog", os.O_WRONLY | os.O_NOCTTY)
+            f = open(fd, "wb+", buffering=0)
+            f.write(value)
+            f.close()
+        except FileNotFoundError:
+            print('WDT file "/dev/watchdog" does not exist. Will disable watchdog...')
+            self.__useLinuxWatchdog = False
+        except OSError:
+            print(
+                "WDT file could not be opened, will retry in 1 second (count = {})".format(
+                    count
+                ),
+            )
+            sleep(1)
+            self.__wdt_write(value, count + 1)
+
+    def __wdt_keepalive(self):
+        self.__wdt_write(b".")
+
+    def __wdt_stop(self):
+        self.__wdt_write(b"V")
+
+    def __wdt_thread(self):
+        from time import sleep
+
+        while self.__useLinuxWatchdog:
+            if self.__sendKeepAlives:
+                self.__wdt_keepalive()
+            else:
+                print("Plumber has stopped sending watchdog keepalives...")
+                sleep(1)

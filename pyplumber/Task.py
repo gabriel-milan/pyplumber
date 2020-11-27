@@ -36,6 +36,14 @@ class Task(Process):
     def __str__(self) -> str:
         return self.__repr__()
 
+    @property
+    def plumber(self):
+        return self.__plumber
+
+    @property
+    def sink(self):
+        return self.__sink
+
     def setup(self, *args, **kwargs):
         return NotImplemented
 

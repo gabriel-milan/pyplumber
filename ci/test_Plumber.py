@@ -67,6 +67,8 @@ def test_Watchdog_warn():
     end = plumber.add(EndAfterFour, dependencies=[rf], output=True)
     plumber.setup()
     plumber.start()
+    assert isinstance(end.plumber, Plumber)
+    assert isinstance(end.sink, Sink)
     for result in plumber.loop():
         print(result)
         for key in result.keys():
