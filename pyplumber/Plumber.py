@@ -2,10 +2,10 @@ __all__ = ["Plumber"]
 
 import string
 import random
-import networkx as nx
 from copy import deepcopy
 from functools import partial
 from threading import Thread, Lock, Timer
+import networkx as nx
 from pyplumber.Sink import Sink
 from pyplumber.Task import Task
 from pyplumber.exceptions import FatalError
@@ -19,6 +19,8 @@ class Plumber:
     monitoring for timeouts.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     ALLOWED_WDT_ACTIONS = ["terminate", "restart", "warn"]
 
     def __init__(
@@ -27,8 +29,6 @@ class Plumber:
         name: str = "",
         use_linux_watchdog: bool = False,
         maxAttempts: int = 5,
-        *args,
-        **kwargs
     ) -> None:
         self.__G = nx.DiGraph()
         self.__graphLock = Lock()
@@ -49,6 +49,7 @@ class Plumber:
     def __str__(self) -> str:
         return self.__repr__()
 
+    @classmethod
     def _generateId(self) -> str:
         return "".join(random.choice(string.ascii_letters) for x in range(10))
 
@@ -66,14 +67,17 @@ class Plumber:
     def add(
         self,
         cls,
-        args: tuple = (),
-        kwargs: dict = {},
-        dependencies: list = [],
+        args: tuple = None,
+        kwargs: dict = None,
+        dependencies: list = None,
         output: bool = False,
         wdt_enabled: bool = False,
         wdt_action: str = "terminate",
         wdt_timeout: float = 24 * 3600,
     ):
+        args = args or ()
+        kwargs = kwargs or {}
+        dependencies = dependencies or []
         if wdt_action not in self.ALLOWED_WDT_ACTIONS:
             raise FatalError(
                 "Watchdog action {} not in the following allowed actions: {}".format(
@@ -81,7 +85,7 @@ class Plumber:
                 )
             )
         obj = cls(*args, **kwargs)
-        if not (issubclass(type(obj), Task)):
+        if not issubclass(type(obj), Task):
             self.log("Accepted objects must inherit from Task")
         self.__graphLock.acquire()
         if obj.name not in self.__G:
@@ -165,7 +169,6 @@ class Plumber:
                     name
                 )
             )
-        return
 
     def startTimer(self, name: str) -> None:
         self.__graphLock.acquire()
@@ -180,7 +183,7 @@ class Plumber:
             self.__G.nodes[name]["timer_started"] = True
         self.__graphLock.release()
 
-    def cancelTimer(self, name: str, pipeline: str = "") -> None:
+    def cancelTimer(self, name: str) -> None:
         self.__graphLock.acquire()
         try:
             self.__G.nodes[name]["timer"].cancel()
@@ -262,7 +265,7 @@ class Plumber:
             except:
                 self.__wdtHandler(node)
         self.log("--> Canceling timer for node {}".format(node))
-        self.cancelTimer(node, self.name)
+        self.cancelTimer(node)
         self.log("--> No predecessors, data is {}".format(data))
         if output and callback:
             callback(data)

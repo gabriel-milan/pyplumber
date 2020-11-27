@@ -1,7 +1,8 @@
 __all__ = ["Task"]
 
-from pyplumber import Sink
 from multiprocessing import Process, Manager
+import abc
+from pyplumber import Sink
 
 
 class Task(Process):
@@ -44,14 +45,17 @@ class Task(Process):
     def sink(self):
         return self.__sink
 
+    @abc.abstractmethod
     def setup(self, *args, **kwargs):
-        return NotImplemented
+        pass
 
+    @abc.abstractmethod
     def execute(self, *args, **kwargs):
-        return NotImplemented
+        pass
 
+    @abc.abstractmethod
     def loop(self, *args, **kwargs):
-        return NotImplemented
+        pass
 
     def run(self, *args, **kwargs):
         while True:

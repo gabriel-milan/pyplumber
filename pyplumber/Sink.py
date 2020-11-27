@@ -1,10 +1,9 @@
 __all__ = ["Sink"]
 
-import dill
-import redis
-import struct
 import pickle
 from typing import Union
+import dill
+import redis
 from pyplumber.exceptions import SerializationError, DeserializationError
 
 
@@ -23,15 +22,13 @@ class Sink(redis.Redis):
     a key.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
-        super(Sink, self).__init__(*args, **kwargs)
-
     def __repr__(self) -> str:
         return "<PyPlumber Sink<pool={}>>".format(self.connection_pool)
 
     def __str__(self) -> str:
         return self.__repr__()
 
+    @classmethod
     def _serialize(self, o: object) -> object:
         if isinstance(o, (str, bytes, int, float)):
             return o
@@ -44,6 +41,7 @@ class Sink(redis.Redis):
                 except:
                     raise SerializationError("Failed to serialize object {}".format(o))
 
+    @classmethod
     def _deserialize(self, e: Union[str, int, float, bytes]) -> object:
         if isinstance(e, (str, int, float)):
             return e
