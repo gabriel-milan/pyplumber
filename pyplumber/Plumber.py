@@ -1,5 +1,6 @@
 __all__ = ["Plumber"]
 
+import logging
 import string
 import random
 from copy import deepcopy
@@ -8,6 +9,7 @@ from threading import Thread, Lock, Timer
 import networkx as nx
 from pyplumber.Sink import Sink
 from pyplumber.Task import Task
+from pyplumber.log import PlumberLogger
 from pyplumber.exceptions import FatalError
 
 
@@ -25,7 +27,7 @@ class Plumber:
 
     def __init__(
         self,
-        debug: bool = False,
+        level: int = logging.INFO,
         name: str = "",
         use_linux_watchdog: bool = False,
         maxAttempts: int = 5,
@@ -33,7 +35,7 @@ class Plumber:
         self.__G = nx.DiGraph()
         self.__graphLock = Lock()
         self.__outputs = []
-        self.__debug = debug
+        self.__level = level
         self.__plumber = None
         self.__name = name if name != "" else "Plumber-{}".format(self._generateId())
         self.__running = True
@@ -42,6 +44,7 @@ class Plumber:
         self.__maxAttempts = maxAttempts
         self.__useLinuxWatchdog = use_linux_watchdog
         self.__sendKeepAlives = True
+        self.__logger = PlumberLogger(level=level)
 
     def __repr__(self) -> str:
         return "<PyPlumber Plumber (name={})>".format(self.name)
@@ -53,16 +56,13 @@ class Plumber:
     def _generateId(cls) -> str:
         return "".join(random.choice(string.ascii_letters) for x in range(10))
 
-    def setDebug(self, val):
-        self.__debug = val
-
     @property
     def name(self) -> str:
         return self.__name
 
-    def log(self, msg: str) -> None:
-        if self.__debug:
-            print(msg)
+    @property
+    def logger(self) -> PlumberLogger:
+        return self.__logger
 
     def add(
         self,
@@ -86,7 +86,7 @@ class Plumber:
             )
         obj = cls(*args, **kwargs)
         if not issubclass(type(obj), Task):
-            self.log("Accepted objects must inherit from Task")
+            self.logger.fatal("Accepted objects must inherit from Task")
         self.__graphLock.acquire()
         if obj.name not in self.__G:
             kw = deepcopy(kwargs)
@@ -147,7 +147,9 @@ class Plumber:
         action = self.__G.nodes[name]["wdt_action"]
         if action == "restart":
             self.__graphLock.acquire()
-            print("Node {} has triggered the watchdog, restarting node...".format(name))
+            self.logger.warning(
+                "Node {} has triggered the watchdog, restarting node...".format(name)
+            )
             self.__G.nodes[name]["obj"].kill()
             self.__G.nodes[name]["obj"] = self.__G.nodes[name]["cls"](
                 *self.__G.nodes[name]["args"], **self.__G.nodes[name]["kwargs"]
@@ -156,7 +158,7 @@ class Plumber:
             self.__G.nodes[name]["obj"].start()
             self.__graphLock.release()
         elif action == "terminate":
-            print(
+            self.logger.fatal(
                 "Node {} has triggered the watchdog, will terminate everything soon".format(
                     name
                 )
@@ -164,7 +166,7 @@ class Plumber:
             self.__sendKeepAlives = False
             self.stop()
         elif action == "warn":
-            print(
+            self.logger.warning(
                 "Node {} has triggered the watchdog! This is just a warning.".format(
                     name
                 )
@@ -189,7 +191,7 @@ class Plumber:
             self.__G.nodes[name]["timer"].cancel()
             self.__G.nodes[name]["timer_started"] = False
         except AttributeError:
-            print("Failed to cancel timer for node {}".format(name))
+            self.logger.warning("Failed to cancel timer for node {}".format(name))
         self.__graphLock.release()
 
     def _appendToResult(self, node, result):
@@ -206,7 +208,7 @@ class Plumber:
     def forward(self, wait: bool = False) -> list:
         self.clear()
         for node in self.__outputs:
-            self.log("--> Getting result from output node {}".format(node))
+            self.logger.debug("--> Getting result from output node {}".format(node))
             thread = Thread(
                 target=self.nodeResult,
                 args=(node, True, partial(self._appendToResult, node)),
@@ -229,7 +231,7 @@ class Plumber:
         self.__running = False
         for key in self.__G.nodes():
             self.__G.nodes[key]["obj"].kill()
-        raise SystemExit
+        # raise SystemExit
 
     def nodeResult(
         self, node: str, output: bool = False, callback: callable = None
@@ -241,21 +243,23 @@ class Plumber:
         self.__graphLock.release()
         # Get predecessors
         preds = list(self.__G.predecessors(node))
-        self.log("--> Node {} predecessors: {}".format(node, preds))
+        self.logger.debug("--> Node {} predecessors: {}".format(node, preds))
         # No predecessors means root
         if len(preds) > 0:
             # Iterate over predecessors
-            self.log("--> Will iterate over predecessors now")
+            self.logger.debug("--> Will iterate over predecessors now")
             for pred in preds:
-                self.log(
+                self.logger.debug(
                     "--> Predecessor {} has no data, will call for nodeResult".format(
                         pred
                     )
                 )
                 self.nodeResult(pred)
-            self.log("--> Successfully executed dependencies for node {}".format(node))
+            self.logger.debug(
+                "--> Successfully executed dependencies for node {}".format(node)
+            )
         # Get data from node
-        self.log("--> Starting timer for node {}".format(node))
+        self.logger.debug("--> Starting timer for node {}".format(node))
         self.startTimer(node)
         success = False
         while not success and self.__running:
@@ -264,9 +268,9 @@ class Plumber:
                 success = True
             except:
                 self.__wdtHandler(node)
-        self.log("--> Canceling timer for node {}".format(node))
+        self.logger.debug("--> Canceling timer for node {}".format(node))
         self.cancelTimer(node)
-        self.log("--> No predecessors, data is {}".format(data))
+        self.logger.debug("--> No predecessors, data is {}".format(data))
         if output and callback:
             callback(data)
         self.__graphLock.acquire()
@@ -284,7 +288,7 @@ class Plumber:
             else:
                 plt.savefig(file)
         except ImportError:
-            print(
+            self.logger.error(
                 'Plotting dependencies for pyPlumber are not installed on this environment. If you want to plot the dependency chart please install them with "pip install pyplumber[plot]"'
             )
 
@@ -293,10 +297,12 @@ class Plumber:
         from time import sleep
 
         if count > 0:
-            print("This is attempt #{} to write on the WDT file".format(count))
+            self.logger.warning(
+                "This is attempt #{} to write on the WDT file".format(count)
+            )
 
         if count >= self.__maxAttempts:
-            print(
+            self.logger.fatal(
                 "Tried to write on WDT file too many times, rebooting in few seconds..."
             )
             sleep(5)
@@ -308,10 +314,12 @@ class Plumber:
             f.write(value)
             f.close()
         except FileNotFoundError:
-            print('WDT file "/dev/watchdog" does not exist. Will disable watchdog...')
+            self.logger.error(
+                'WDT file "/dev/watchdog" does not exist. Will disable watchdog...'
+            )
             self.__useLinuxWatchdog = False
         except OSError:
-            print(
+            self.logger.warning(
                 "WDT file could not be opened, will retry in 1 second (count = {})".format(
                     count
                 ),
@@ -332,5 +340,7 @@ class Plumber:
             if self.__sendKeepAlives:
                 self.__wdt_keepalive()
             else:
-                print("Plumber has stopped sending watchdog keepalives...")
+                self.logger.warning(
+                    "Plumber has stopped sending watchdog keepalives..."
+                )
                 sleep(1)

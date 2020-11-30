@@ -65,5 +65,5 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
-    ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
+    # ext_modules=cythonize(extensions, compiler_directives={"language_level": "3"}),
 )

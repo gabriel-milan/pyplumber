@@ -24,7 +24,7 @@ def setup1():
         def execute(self):
             self.set("test", 0)
 
-    plumber = Plumber(debug=True)
+    plumber = Plumber()
 
     start = plumber.add(Starter)
     inc = plumber.add(Incrementer, dependencies=[start])
@@ -124,7 +124,6 @@ def test_Full():
     plumber.start()
     for result in plumber.loop():
         assert result == {}
-    plumber.setDebug(True)
     for result in plumber.loop():
         assert result == {}
 
