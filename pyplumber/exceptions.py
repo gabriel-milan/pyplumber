@@ -2,6 +2,7 @@ __all__ = ["SerializationError", "DeserializationError", "FatalError"]
 
 
 class SerializationError(Exception):
+
     """
     Exception raised when
     serialization fails.
@@ -9,6 +10,7 @@ class SerializationError(Exception):
 
 
 class DeserializationError(Exception):
+
     """
     Exception raised when
     deserialization fails.
@@ -16,6 +18,7 @@ class DeserializationError(Exception):
 
 
 class FatalError(Exception):
+
     """
     General purpose exception.
     """

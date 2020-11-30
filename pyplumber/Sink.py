@@ -8,6 +8,7 @@ from pyplumber.exceptions import SerializationError, DeserializationError
 
 
 class Sink(redis.Redis):
+
     """
     The sink is where you dump all the
     data you want to be visible to the
@@ -23,9 +24,19 @@ class Sink(redis.Redis):
     """
 
     def __repr__(self) -> str:
+
+        """
+        Representation of this Sink object
+        """
+
         return "<PyPlumber Sink<pool={}>>".format(self.connection_pool)
 
     def __str__(self) -> str:
+
+        """
+        Representation of this Sink object
+        """
+
         return self.__repr__()
 
     @classmethod

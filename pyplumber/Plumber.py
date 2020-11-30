@@ -14,6 +14,7 @@ from pyplumber.exceptions import FatalError
 
 
 class Plumber:
+
     """
     Plumber define how Daemons and Tasks
     interact with each other, handling
@@ -32,6 +33,18 @@ class Plumber:
         use_linux_watchdog: bool = False,
         maxAttempts: int = 5,
     ) -> None:
+
+        """Inits Plumber.
+
+        Args:
+            level: the Logger level, default is logging.INFO.
+            name: name of this Plumber object. If not specified,
+                a random one shall be generated.
+            use_linux_watchdog: boolean that enables integration
+                with Linux watchdog on "/dev/watchdog" file.
+            maxAttempts: sets max attempts on writing on watchdog
+                file before it reboots the system.
+        """
         self.__G = nx.DiGraph()
         self.__graphLock = Lock()
         self.__outputs = []
@@ -47,9 +60,19 @@ class Plumber:
         self.__logger = PlumberLogger(level=level)
 
     def __repr__(self) -> str:
+
+        """
+        Representation of the Plumber object
+        """
+
         return "<PyPlumber Plumber (name={})>".format(self.name)
 
     def __str__(self) -> str:
+
+        """
+        Representation of the Plumber object
+        """
+
         return self.__repr__()
 
     @classmethod

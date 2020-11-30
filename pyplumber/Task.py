@@ -6,6 +6,7 @@ from pyplumber import Sink
 
 
 class Task(Process):
+
     """
     Task is an abstract class that, when inherited,
     will represent a daemon task that runs indefinetely,
@@ -32,9 +33,19 @@ class Task(Process):
         self._dict = self.__manager.dict()
 
     def __repr__(self) -> str:
+
+        """
+        Representation of this Task object
+        """
+
         return "<PyPlumber Task (name={}, alive={})>".format(self.name, self.is_alive())
 
     def __str__(self) -> str:
+
+        """
+        Representation of this Task object
+        """
+
         return self.__repr__()
 
     @property

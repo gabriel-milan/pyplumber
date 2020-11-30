@@ -7,6 +7,11 @@ import logging
 
 
 class PlumberFormatter(logging.Formatter):
+
+    """
+    Custom formatter for pyPlumber logger
+    """
+
     black = "0;30"
     red = "0;31"
     green = "0;32"
@@ -36,6 +41,14 @@ class PlumberFormatter(logging.Formatter):
     }
 
     def __init__(self, msg="[%(levelname)s] %(asctime)s: %(message)s", color=True):
+
+        """Inits PlumberFormatter.
+
+        Args:
+            msg: the message format.
+            color: enables/disables coloring
+        """
+
         if color:
             super(PlumberFormatter, self).__init__(
                 self.color_seq + msg + self.reset_seq
@@ -53,12 +66,27 @@ class PlumberFormatter(logging.Formatter):
 
 
 class PlumberLogger(logging.Logger):
+
+    """
+    Custom Logger class for pyPlumber
+    """
+
     def __init__(
         self,
         name="PlumberLogger",
         level=logging.NOTSET,
         formatter=None,
     ):
+
+        """Inits PlumberLogger.
+
+        Args:
+            name: the logger name.
+            level: the logger level.
+            formatter: custom formatting. Default is
+                PlumberFormatter.
+        """
+
         super(PlumberLogger, self).__init__(name, level)
         self.propagate = False
         for handler in self.handlers.copy():

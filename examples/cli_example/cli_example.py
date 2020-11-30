@@ -1,4 +1,3 @@
-import logging
 from pyplumber import Task, Plumber
 
 
