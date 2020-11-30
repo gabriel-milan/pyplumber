@@ -10,6 +10,7 @@ def setup1():
             data = self.get("test")
             print(data)
             self.terminate()
+            return data
 
     class Incrementer(Task):
         def setup(self):
@@ -123,9 +124,11 @@ def test_Full():
     plumber.setup()
     plumber.start()
     for result in plumber.loop():
-        assert result == {}
+        for key in result:
+            assert result[key] == "1"
     for result in plumber.loop():
-        assert result == {}
+        for key in result:
+            assert result[key] == "1"
 
 
 def test_PlumberPrinting():
