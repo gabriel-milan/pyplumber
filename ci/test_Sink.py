@@ -93,6 +93,14 @@ def test_deserialize_int():
     assert sink._deserialize(1) == 1
 
 
+def test_deserialize_bool():
+    _, sink = setup()
+    sink.set("test", True)
+    assert sink.get("test")
+    sink.set("test", False)
+    assert not sink.get("test")
+
+
 def test_force_dill():
     _, sink = setup()
     inp = compile("", "", "exec")

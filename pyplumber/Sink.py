@@ -41,7 +41,9 @@ class Sink(redis.Redis):
 
     @classmethod
     def _serialize(cls, o: object) -> object:
-        if isinstance(o, (str, bytes, int, float)):
+        if isinstance(o, bool):
+            return pickle.dumps(o)
+        elif isinstance(o, (str, bytes, int, float)):
             return o
         else:
             try:
