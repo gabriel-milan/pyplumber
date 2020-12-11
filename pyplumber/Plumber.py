@@ -96,6 +96,7 @@ class Plumber:
         output: bool = False,
         wdt_enabled: bool = False,
         wdt_action: str = "terminate",
+        wdt_retries: int = 50,
         wdt_timeout: float = 24 * 3600,
     ):
         args = args or ()
@@ -122,6 +123,7 @@ class Plumber:
                 obj=obj,
                 wdt_enabled=wdt_enabled,
                 wdt_action=wdt_action,
+                wdt_retries=wdt_retries,
                 wdt_timeout=wdt_timeout,
                 timer=None,
                 timer_started=False,
@@ -285,7 +287,18 @@ class Plumber:
         self.logger.debug("--> Starting timer for node {}".format(node))
         self.startTimer(node)
         success = False
+        tries = 0
+        max_tries = self.__G.nodes[node]["wdt_retries"]
         while not success and self.__running:
+            if self.__G.nodes[node]["wdt_action"] == "restart":
+                tries += 1
+            if (tries >= max_tries) and self.__sendKeepAlives:
+                self.logger.error(
+                    "Tried too hard to restart Task {}, Watchdog will now stop sending keepalives".format(
+                        node
+                    )
+                )
+                self.__sendKeepAlives = False
             try:
                 data = self.__G.nodes[node]["obj"].execute()
                 success = True

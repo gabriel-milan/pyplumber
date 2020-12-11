@@ -26,7 +26,7 @@ extensions = [
 
 setup(
     name="pyplumber",
-    version="0.1.6",
+    version="0.1.7",
     license="GPL-3.0",
     description="PyPlumber provides some tools for looping pipelines using tasks and daemonized jobs.",
     long_description=long_description,
