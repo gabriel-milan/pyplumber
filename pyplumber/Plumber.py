@@ -366,4 +366,4 @@ class Plumber:
                 self.logger.warning(
                     "Plumber has stopped sending watchdog keepalives..."
                 )
-                sleep(1)
+            sleep(1)
