@@ -179,8 +179,8 @@ class Plumber:
             self.__G.nodes[name]["obj"] = self.__G.nodes[name]["cls"](
                 *self.__G.nodes[name]["args"], **self.__G.nodes[name]["kwargs"]
             )
-            self.__G.nodes[node]["obj"].setSink(self.__sink)
-            self.__G.nodes[node]["obj"].setPlumber(self)
+            self.__G.nodes[name]["obj"].setSink(self.__sink)
+            self.__G.nodes[name]["obj"].setPlumber(self)
             self.__G.nodes[name]["obj"].setup()
             self.__G.nodes[name]["obj"].start()
             self.__graphLock.release()
